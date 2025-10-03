@@ -1,67 +1,84 @@
 ```mermaid
-graph TD
-    Start([Initial Request]) --> Atomizer{Atomizer:<br/>Is task atomic?}
-    
-    %% Atomic Path
-    Atomizer -->|Yes: Atomic| Executor[Executor:<br/>Execute atomic task]
-    Executor --> Return1([Return Result])
-    
-    %% Non-Atomic Path
-    Atomizer -->|No: Complex| Planner[Planner:<br/>Break into subtasks]
-    Planner --> SubtaskList[Generate Subtasks<br/>subtask1, subtask2, ..., subtaskN]
-    SubtaskList --> Recursive[Recursive Solve Loop]
-    
-    %% Recursive Processing
-    Recursive --> SubAtomizer1{Atomizer:<br/>subtask1 atomic?}
-    Recursive --> SubAtomizer2{Atomizer:<br/>subtask2 atomic?}
-    Recursive --> SubAtomizerN{Atomizer:<br/>subtaskN atomic?}
-    
-    %% Subtask 1 - Atomic
-    SubAtomizer1 -->|Yes| SubExecutor1[Executor:<br/>Execute subtask1]
-    SubExecutor1 --> Result1[Result 1]
-    
-    %% Subtask 1 - Non-Atomic
-    SubAtomizer1 -->|No| SubPlanner1[Planner:<br/>Break subtask1]
-    SubPlanner1 --> Recursive1[Recursive<br/>solve...]
-    Recursive1 -.->|Further recursion| Result1
-    
-    %% Subtask 2 - Atomic
-    SubAtomizer2 -->|Yes| SubExecutor2[Executor:<br/>Execute subtask2]
-    SubExecutor2 --> Result2[Result 2]
-    
-    %% Subtask 2 - Non-Atomic
-    SubAtomizer2 -->|No| SubPlanner2[Planner:<br/>Break subtask2]
-    SubPlanner2 --> Recursive2[Recursive<br/>solve...]
-    Recursive2 -.->|Further recursion| Result2
-    
-    %% Subtask N - Atomic
-    SubAtomizerN -->|Yes| SubExecutorN[Executor:<br/>Execute subtaskN]
-    SubExecutorN --> ResultN[Result N]
-    
-    %% Subtask N - Non-Atomic
-    SubAtomizerN -->|No| SubPlannerN[Planner:<br/>Break subtaskN]
-    SubPlannerN --> RecursiveN[Recursive<br/>solve...]
-    RecursiveN -.->|Further recursion| ResultN
-    
-    %% Dependency Management
-    Result1 --> DependencyCheck{Check<br/>Dependencies}
-    DependencyCheck -->|subtask2 depends on subtask1| Result2
-    Result2 --> DependencyCheck2{Check<br/>Dependencies}
-    DependencyCheck2 --> ResultN
-    
-    %% Aggregation
-    ResultN --> Aggregator[Aggregator:<br/>Combine all results]
-    Aggregator --> ParentResult([Return Parent Task Result])
-    
-    %% Styling
-    classDef atomicClass fill:#90EE90,stroke:#006400,stroke-width:2px
-    classDef nonAtomicClass fill:#FFB6C1,stroke:#8B0000,stroke-width:2px
-    classDef decisionClass fill:#87CEEB,stroke:#00008B,stroke-width:2px
-    classDef processClass fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px
-    classDef resultClass fill:#E6E6FA,stroke:#4B0082,stroke-width:2px
-    
-    class Executor,SubExecutor1,SubExecutor2,SubExecutorN atomicClass
-    class Planner,SubPlanner1,SubPlanner2,SubPlannerN nonAtomicClass
-    class Atomizer,SubAtomizer1,SubAtomizer2,SubAtomizerN,DependencyCheck,DependencyCheck2 decisionClass
-    class Aggregator,Recursive,Recursive1,Recursive2,RecursiveN processClass
-    class Result1,Result2,ResultN,ParentResult,Return1 resultClass
+---
+config:
+  layout: elk
+  look: handDrawn
+  theme: dark
+  themeVariables:
+    background: "#0b1220"
+---
+graph TB
+    subgraph NORMAL["✅ NORMAL TEE OPERATION - Secure & Isolated"]
+        direction TB
+        A1[👤 User Application<br/>Needs Secret Processing] -->|1. Send Encrypted Data| B1[🔐 TEE Interface]
+        B1 -->|2. Enter Secure Zone| C1[🏰 TEE Secure Enclave<br/>Hardware Protected]
+        C1 -->|3. Store in Protected RAM| D1[🛡️ Encrypted Memory<br/>Address: 0x1000-0x2000]
+        D1 -->|4. Process Secretly| C1
+        C1 -->|5. Return Encrypted Result| B1
+        B1 -->|6. Deliver to User| A1
+
+        F1[🚫 Operating System] -.->|❌ Blocked| C1
+        G1[🚫 Other Apps] -.->|❌ Blocked| C1
+        H1[🚫 Admin/Root] -.->|❌ Blocked| C1
+
+        C1 -->|Attestation Report| I1[✅ Verified Genuine TEE<br/>No Tampering Detected]
+
+        style C1 fill:#2d5016,stroke:#4ade80,stroke-width:4px,color:#fff
+        style D1 fill:#1e3a8a,stroke:#60a5fa,stroke-width:3px,color:#fff
+        style I1 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
+        style F1 fill:#7f1d1d,stroke:#ef4444,stroke-dasharray: 5 5,color:#fff
+        style G1 fill:#7f1d1d,stroke:#ef4444,stroke-dasharray: 5 5,color:#fff
+        style H1 fill:#7f1d1d,stroke:#ef4444,stroke-dasharray: 5 5,color:#fff
+    end
+
+    subgraph BADRAM["🚨 BadRAM ATTACK - Memory Aliasing Exploit"]
+        direction TB
+        A2[👤 Victim TEE App<br/>Storing Secrets] -->|Write to 0x8000| B2[💾 Modified RAM Module<br/>SPD Says: 64GB<br/>Reality: 32GB]
+        A3[😈 Attacker App] -->|Read from 0x1000| B2
+
+        B2 -->|Maps 0x8000 → Physical 0x1000| C2[⚠️ Same Physical Location!]
+        B2 -->|Maps 0x1000 → Physical 0x1000| C2
+
+        C2 -->|Contains: Private Keys<br/>Credit Cards<br/>Passwords| D2[📤 Data Leaked to Attacker]
+
+        E2[🔧 Attack Setup<br/>Cost: $10] -.->|1. Modify SPD Chip| B2
+        F2[💻 Raspberry Pi +<br/>Flashing Tools] -.->|2. Reprogram Memory Size| E2
+
+        G2[✅ System Reports:<br/>All Security OK] -->|False Sense of Security| A2
+
+        style B2 fill:#7f1d1d,stroke:#ef4444,stroke-width:4px,color:#fff
+        style C2 fill:#991b1b,stroke:#fca5a5,stroke-width:4px,color:#fff
+        style D2 fill:#7c2d12,stroke:#fb923c,stroke-width:3px,color:#fff
+        style E2 fill:#431407,stroke:#fdba74,stroke-width:2px,color:#fff
+        style F2 fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#fff
+        style G2 fill:#065f46,stroke:#34d399,stroke-width:2px,color:#fff
+    end
+
+    subgraph VOLTSCHEMER["⚡ VoltSchemer ATTACK - Voltage Manipulation"]
+        direction TB
+        A4[📱 Target Device with TEE<br/>Intel SGX or TDX]
+        B4[🔌 Power Supply] -->|Normal Voltage 5V| A4
+
+        C4[😈 Attacker Controls<br/>USB Charger or Dock] -->|Inject Malicious Signals| B4
+        C4 -->|Voltage Glitching| D4[⚡ Rapid Voltage Changes<br/>Cause Bit Flips]
+
+        D4 -->|Corrupt TEE Memory| E4[🏰 TEE Secure Enclave<br/>Under Attack]
+        E4 -->|Bit Flip in Security Check| F4[🚫 Bypass Attestation]
+        E4 -->|Corrupt Encryption Keys| G4[🔓 Access Protected Data]
+        E4 -->|Timing Attack| H4[📊 Extract Secrets via<br/>Power Analysis]
+
+        F4 --> I4[💀 Complete TEE Compromise]
+        G4 --> I4
+        H4 --> I4
+
+        J4[🎯 Attack Vector:<br/>Malicious Charger<br/>Evil USB-C Dock<br/>Compromised Power] -.->|Physical Connection| C4
+
+        K4[⏱️ Attack Duration:<br/>Seconds to Minutes] -.->|Fast and Stealthy| D4
+
+        style C4 fill:#7f1d1d,stroke:#ef4444,stroke-width:4px,color:#fff
+        style D4 fill:#991b1b,stroke:#fca5a5,stroke-width:4px,color:#fff
+        style E4 fill:#7c2d12,stroke:#fb923c,stroke-width:3px,color:#fff
+        style I4 fill:#450a0a,stroke:#fca5a5,stroke-width:4px,color:#fff
+        style J4 fill:#431407,stroke:#fdba74,stroke-width:2px,color:#fff
+        style K4 fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#fff
+    end
